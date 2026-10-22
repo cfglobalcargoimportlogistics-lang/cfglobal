@@ -55,7 +55,7 @@
 
   <main>
     <section class="hero" id="inicio">
-      <!-- El degradado de CSS se superpone automáticamente a la imagen de fondo. -->
+      <!-- El fondo usa assets/hero-bg.webp y el degradado de CSS se superpone automáticamente. -->
       <div class="hero-background" aria-hidden="true"></div>
       <div class="hero-content">
         <h1>DEL MUNDO A<br><span>BOLIVIA</span></h1>
@@ -204,17 +204,16 @@
 
   <footer class="site-footer" id="contacto">
     <div class="site-footer-card">
-      <section class="footer-invitation">
-        <h2>¿Listo para cotizar?</h2>
-        <p>CF Global Cargo te acompaña en tu próxima importación.</p>
-      </section>
-      <div class="footer-rights">
+      <section class="footer-rights">
         <strong>CF Global Cargo</strong>
-        <p>© <span data-current-year></span> CF Global Cargo. Todos los derechos reservados.</p>
-      </div>
+        <p class="footer-copyright">© <span data-current-year></span> CF Global Cargo. Todos los derechos reservados.</p>
+      </section>
       <section class="footer-contacts" data-footer-contacts aria-labelledby="footerContactsTitle" hidden>
         <h2 id="footerContactsTitle">Contacto</h2>
-        <p data-contact-row="2" hidden><strong data-contact-phone="2"></strong></p>
+        <p class="footer-contact-number" data-contact-row="2" hidden>
+          <span>WhatsApp:</span>
+          <strong data-contact-phone="2"></strong>
+        </p>
       </section>
     </div>
   </footer>

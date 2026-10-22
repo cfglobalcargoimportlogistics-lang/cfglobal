@@ -65,5 +65,8 @@ node_modules/
 # dotenv environment variables file
 .env
 
+# Public browser config generated from .env; keep the local file for preview/deploy.
+/js/public-config.js
+
 # dataconnect generated files
 .dataconnect

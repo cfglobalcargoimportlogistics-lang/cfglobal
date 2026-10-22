@@ -4,7 +4,6 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const envPath = resolve(root, ".env");
-const examplePath = resolve(root, ".env.example");
 const outputPath = resolve(root, "js/public-config.js");
 
 function parseEnv(source) {
@@ -26,11 +25,14 @@ function parseEnv(source) {
   return values;
 }
 
-const [exampleSource, envSource] = await Promise.all([
-  readFile(examplePath, "utf8").catch((error) => error.code === "ENOENT" ? "" : Promise.reject(error)),
-  readFile(envPath, "utf8").catch((error) => error.code === "ENOENT" ? "" : Promise.reject(error))
-]);
-const env = { ...parseEnv(exampleSource), ...parseEnv(envSource) };
+let envSource;
+try {
+  envSource = await readFile(envPath, "utf8");
+} catch (error) {
+  if (error.code === "ENOENT") throw new Error("No se encontró .env. Crea el archivo antes de generar la configuración pública.");
+  throw error;
+}
+const env = parseEnv(envSource);
 const digitsOnly = (value) => String(value || "").replace(/\D/g, "");
 const whatsappHeaderNumber = digitsOnly(env.WHATSAPP_HEADER_NUMBER);
 const publicConfig = {
@@ -59,6 +61,6 @@ const publicConfig = {
   }
 };
 
-const output = `// Generado desde .env y .env.example. Solo incluye configuración pública del navegador.\nwindow.APP_CONFIG = Object.freeze(${JSON.stringify(publicConfig, null, 2)});\n`;
+const output = `// Generado desde .env. Solo incluye configuración pública del navegador.\nwindow.APP_CONFIG = Object.freeze(${JSON.stringify(publicConfig, null, 2)});\n`;
 await writeFile(outputPath, output, "utf8");
-console.log("Configuración pública actualizada desde .env y .env.example en js/public-config.js.");
+console.log("Configuración pública actualizada desde .env en js/public-config.js.");
