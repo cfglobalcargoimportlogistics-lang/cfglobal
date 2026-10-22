@@ -125,7 +125,7 @@ function numeric(form, fieldName) {
 }
 
 function metricsFor(form) {
-  const boxCount = numeric(form, "cantidadCajas") || numeric(form, "cantidadBultos") || numeric(form, "cantidadPallets");
+  const boxCount = numeric(form, "cantidadCajas") || numeric(form, "cantidadBultos");
   const containerCount = numeric(form, "cantidadContenedores");
   let weightKg = numeric(form, "pesoTotalKg");
   if (!weightKg && numeric(form, "pesoCajaKg") && numeric(form, "cantidadCajas")) {
@@ -181,7 +181,7 @@ function updateEstimate(service, form) {
     if (amount < 0) throw new Error("La fórmula produjo un monto negativo.");
     estimate.textContent = `Estimación referencial: ${formatBolivianos(amount)}. El monto final se confirma al revisar los datos de la carga.`;
     estimate.dataset.amount = String(amount);
-  } catch (error) {
+  } catch {
     estimate.textContent = "Tarifa pendiente de revisión por el administrador.";
     estimate.dataset.amount = "";
   }
@@ -202,50 +202,43 @@ function currentFormValues(service, form) {
   return values;
 }
 
-function recipientValues() {
-  return [APP_CONFIG.whatsappRecipient1, APP_CONFIG.whatsappRecipient2]
-    .map((phone) => String(phone || "").replace(/\D/g, ""))
-    .filter(Boolean);
+function quoteRecipient() {
+  return String(APP_CONFIG.whatsappContactPhone2 || "").replace(/\D/g, "");
 }
 
 function whatsappLink(phone, message) {
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
 
-function showManualWhatsAppLinks(result, message, noteText, configuredRecipients = recipientValues()) {
+function showQuoteWhatsApp(result, message, noteText, configuredRecipient = quoteRecipient()) {
   result.replaceChildren();
   result.classList.remove("is-error");
-  const recipients = configuredRecipients;
   const note = document.createElement("p");
-  note.textContent = noteText || (recipients.length === 2
-    ? "Solicitud preparada para los dos contactos. Abre cada chat y confirma el envío en WhatsApp."
-    : recipients.length === 1
-      ? "Solo hay un número configurado. Abre el chat y confirma el envío en WhatsApp."
-      : "No hay números configurados para enviar la solicitud.");
+  note.textContent = noteText || "La cotización está lista. Abre WhatsApp y confirma el envío.";
   result.append(note);
-  recipients.forEach((phone, index) => {
+  if (configuredRecipient) {
     const link = document.createElement("a");
     link.className = "button button-orange service-whatsapp-link";
-    link.href = whatsappLink(phone, message);
+    link.href = whatsappLink(configuredRecipient, message);
     link.target = "_blank";
     link.rel = "noopener noreferrer";
-    link.textContent = `ABRIR WHATSAPP ${index + 1} →`;
+    link.textContent = "ABRIR WHATSAPP →";
     result.append(link);
-  });
-  if (!recipients.length) {
+  }
+  if (!configuredRecipient) {
     const warning = document.createElement("small");
-    warning.textContent = "No hay números configurados. Completa los destinatarios en .env y vuelve a generar la configuración pública.";
+    warning.textContent = "Completa WHATSAPP_CONTACT_PHONE_2 en .env y vuelve a generar la configuración pública.";
     result.append(warning);
     result.classList.add("is-error");
   } else {
     const limitation = document.createElement("small");
-    limitation.textContent = "El mensaje ya está rellenado; confirma Enviar en cada chat de WhatsApp.";
+    limitation.textContent = "El mensaje ya está rellenado; confirma Enviar en WhatsApp.";
     result.append(limitation);
     result.classList.add("is-success");
   }
 }
 
-async function submitQuote(event, service, form) {
+function submitQuote(event, service, form) {
   event.preventDefault();
   const result = form.querySelector("[data-submit-result]");
   result.hidden = false;
@@ -268,7 +261,7 @@ async function submitQuote(event, service, form) {
     messageLines.push("Cotización: pendiente de revisión por el equipo.");
   }
   const message = messageLines.join("\n");
-  showManualWhatsAppLinks(result, message);
+  showQuoteWhatsApp(result, message);
   result.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 

@@ -160,6 +160,19 @@ if (originDialog) {
 }
 
 const publicConfig = window.APP_CONFIG || {};
+const currentYear = document.querySelector("[data-current-year]");
+if (currentYear) currentYear.textContent = String(new Date().getFullYear());
+
+const contactRow = document.querySelector('[data-contact-row="2"]');
+const contactPhone = String(publicConfig.whatsappContactPhone2 || "").trim();
+const contactPhoneOutput = contactRow?.querySelector("[data-contact-phone]");
+if (contactRow && contactPhoneOutput && contactPhone) {
+  contactPhoneOutput.textContent = contactPhone;
+  contactRow.hidden = false;
+}
+const footerContacts = document.querySelector("[data-footer-contacts]");
+if (footerContacts) footerContacts.hidden = !contactPhone;
+
 const socialUrls = {
   tiktok: publicConfig.socialTikTokUrl,
   facebook: publicConfig.socialFacebookUrl,
@@ -170,7 +183,7 @@ const socialUrls = {
 function isSafeExternalUrl(value) {
   try {
     const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:";
+    return url.protocol === "https:";
   } catch {
     return false;
   }

@@ -1,10 +1,35 @@
 {
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "hosting": {
     "public": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**"
+      "**/.env",
+      "**/.env.*",
+      "**/node_modules/**",
+      "scripts/**",
+      "FIREBASE_SETUP.md",
+      "firestore.rules",
+      "firestore.indexes.json",
+      "storage.rules"
+    ],
+    "headers": [
+      {
+        "source": "/admin.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-store"
+          }
+        ]
+      }
     ]
   }
 }

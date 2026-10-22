@@ -31,17 +31,34 @@ const [exampleSource, envSource] = await Promise.all([
   readFile(envPath, "utf8").catch((error) => error.code === "ENOENT" ? "" : Promise.reject(error))
 ]);
 const env = { ...parseEnv(exampleSource), ...parseEnv(envSource) };
+const digitsOnly = (value) => String(value || "").replace(/\D/g, "");
+const whatsappHeaderNumber = digitsOnly(env.WHATSAPP_HEADER_NUMBER);
 const publicConfig = {
   socialTikTokUrl: env.SOCIAL_TIKTOK_URL || "",
   socialFacebookUrl: env.SOCIAL_FACEBOOK_URL || "",
   socialInstagramUrl: env.SOCIAL_INSTAGRAM_URL || "",
-  socialWhatsAppUrl: env.SOCIAL_WHATSAPP_URL || "",
+  socialWhatsAppUrl: whatsappHeaderNumber
+    ? `https://wa.me/${whatsappHeaderNumber}`
+    : env.SOCIAL_WHATSAPP_URL || "",
   whatsappGroupChinaUrl: env.WHATSAPP_GROUP_CHINA_URL || "",
   whatsappGroupChileUrl: env.WHATSAPP_GROUP_CHILE_URL || "",
-  whatsappRecipient1: (env.WHATSAPP_QUOTE_RECIPIENT_1 || "").replace(/\D/g, ""),
-  whatsappRecipient2: (env.WHATSAPP_QUOTE_RECIPIENT_2 || "").replace(/\D/g, "")
+  whatsappHeaderNumber,
+  whatsappContactPhone2: String(env.WHATSAPP_CONTACT_PHONE_2 || "").trim(),
+  firebase: {
+    apiKey: env.FIREBASE_API_KEY || "",
+    authDomain: env.FIREBASE_AUTH_DOMAIN || "",
+    projectId: env.FIREBASE_PROJECT_ID || "",
+    storageBucket: env.FIREBASE_STORAGE_BUCKET || "",
+    messagingSenderId: env.FIREBASE_MESSAGING_SENDER_ID || "",
+    appId: env.FIREBASE_APP_ID || "",
+    measurementId: env.FIREBASE_MEASUREMENT_ID || ""
+  },
+  cloudinary: {
+    cloudName: env.CLOUDINARY_CLOUD_NAME || "",
+    uploadPreset: env.CLOUDINARY_UPLOAD_PRESET || ""
+  }
 };
 
-const output = `// Generado desde .env y .env.example. No agregues secretos aquí.\nwindow.APP_CONFIG = Object.freeze(${JSON.stringify(publicConfig, null, 2)});\n`;
+const output = `// Generado desde .env y .env.example. Solo incluye configuración pública del navegador.\nwindow.APP_CONFIG = Object.freeze(${JSON.stringify(publicConfig, null, 2)});\n`;
 await writeFile(outputPath, output, "utf8");
 console.log("Configuración pública actualizada desde .env y .env.example en js/public-config.js.");

@@ -1,19 +1,20 @@
-// js/firebase-config.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { getStorage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyDOfW5DXkPq5HDLYqoP1GrNKKt1VdlF2rw",
-    authDomain: "cfglobalcargo-a9bcf.firebaseapp.com",
-    projectId: "cfglobalcargo-a9bcf",
-    storageBucket: "cfglobalcargo-a9bcf.firebasestorage.app",
-    messagingSenderId: "482980808360",
-    appId: "1:482980808360:web:1ac42bba10072bd9e4649d"
-};
+const firebaseConfig = window.APP_CONFIG?.firebase;
+if (!firebaseConfig?.apiKey || !firebaseConfig?.projectId) {
+  throw new Error("Falta la configuración pública de Firebase. Revisa .env y genera js/public-config.js.");
+}
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
-export const storage = getStorage(app);
+
+if (firebaseConfig.measurementId) {
+  void import("https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js")
+    .then(async ({ getAnalytics, isSupported }) => {
+      if (await isSupported()) getAnalytics(app);
+    })
+    .catch((error) => {
+      console.warn("Firebase Analytics no está disponible en este navegador/proyecto:", error);
+    });
+}

@@ -1,15 +1,17 @@
-import { auth, db } from './firebase-config.js';
+import { auth } from './firebase-auth.js';
+import { db } from './firebase-config.js';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { collection, addDoc, getDocs, doc, deleteDoc, query, orderBy, updateDoc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { DEFAULT_TARIFF, SERVICES, TARIFF_VARIABLES } from "./services-config.js";
 import { evaluateFormula } from "./formula.js";
 
 // Configuración pública de subida de imágenes en Cloudinary.
-const CLOUD_NAME = "dsbzdsrgk";
-const UPLOAD_PRESET = "cf-global-cargo";
+const CLOUD_NAME = window.APP_CONFIG?.cloudinary?.cloudName || "";
+const UPLOAD_PRESET = window.APP_CONFIG?.cloudinary?.uploadPreset || "";
 const PRODUCTS_COLLECTION = "productos";
 const categoryLabels = { china: "China", zofri: "Chile · Zofri" };
 
+const authLoading = document.getElementById('authLoading');
 const loginSection = document.getElementById('loginSection');
 const adminDashboard = document.getElementById('adminDashboard');
 const loginForm = document.getElementById('loginForm');
@@ -61,12 +63,23 @@ let editingProductId = null;
 let editingImageUrl = "";
 
 onAuthStateChanged(auth, (user) => {
+    authLoading.hidden = true;
     loginSection.style.display = user ? 'none' : 'flex';
     adminDashboard.style.display = user ? 'block' : 'none';
     if (user) {
         loadAdminProducts();
         loadAdminTariffs();
+    } else {
+        loginError.textContent = "";
+        loginError.hidden = true;
     }
+}, (error) => {
+    console.error("No se pudo comprobar la sesión:", error);
+    authLoading.hidden = true;
+    loginSection.style.display = 'flex';
+    adminDashboard.style.display = 'none';
+    loginError.textContent = "No se pudo comprobar la sesión. Recarga la página e inténtalo nuevamente.";
+    loginError.hidden = false;
 });
 
 loginForm.addEventListener('submit', async (event) => {
@@ -86,7 +99,16 @@ loginForm.addEventListener('submit', async (event) => {
     }
 });
 
-btnLogout.addEventListener('click', () => signOut(auth));
+btnLogout.addEventListener('click', async () => {
+    btnLogout.disabled = true;
+    try {
+        await signOut(auth);
+        window.location.replace('index.html');
+    } catch (error) {
+        console.error("Error cerrando sesión:", error);
+        btnLogout.disabled = false;
+    }
+});
 cancelEditButton.addEventListener('click', resetProductForm);
 
 tariffEditor.innerHTML = SERVICES.map((service) => `
@@ -228,6 +250,9 @@ addProductForm.addEventListener('submit', async (event) => {
 });
 
 async function uploadProductImage(file) {
+    if (!CLOUD_NAME || !UPLOAD_PRESET) {
+        throw new Error("Falta configurar Cloudinary en .env.");
+    }
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', UPLOAD_PRESET);
